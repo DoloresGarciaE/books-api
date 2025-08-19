@@ -43,9 +43,9 @@ describe('metricsHandler', () => {
       expect(mockBooksProvider.getBooks).toHaveBeenCalled()
       expect(mockRes.status).toHaveBeenCalledWith(200)
       expect(jsonMock).toHaveBeenCalledWith({
-        mean_units_sold: 200,
-        cheapest_book: mockBooks[1],
-        books_written_by_author: []
+        meanUnitsSold: 200,
+        cheapestBook: mockBooks[1],
+        booksWrittenByAuthor: []
       })
     })
 
@@ -57,13 +57,33 @@ describe('metricsHandler', () => {
       expect(mockBooksProvider.getBooks).toHaveBeenCalled()
       expect(mockRes.status).toHaveBeenCalledWith(200)
       expect(jsonMock).toHaveBeenCalledWith({
-        mean_units_sold: 200,
-        cheapest_book: mockBooks[1],
-        books_written_by_author: [
+        meanUnitsSold: 200,
+        cheapestBook: mockBooks[1],
+        booksWrittenByAuthor: [
           mockBooks[0],
           mockBooks[2]
         ]
       })
+    })
+
+    it('should return 404 if no books found', async () => {
+      mockBooksProvider.getBooks = vi.fn().mockReturnValue([])
+
+      await handler.get(mockReq as any, mockRes as any)
+
+      expect(mockBooksProvider.getBooks).toHaveBeenCalled()
+      expect(mockRes.status).toHaveBeenCalledWith(404)
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'No books found' })
+    })
+
+    it('should return 500 if an error occurs', async () => {
+      mockBooksProvider.getBooks = vi.fn().mockRejectedValue(new Error('API error'))
+
+      await handler.get(mockReq as any, mockRes as any)
+
+      expect(mockBooksProvider.getBooks).toHaveBeenCalled()
+      expect(mockRes.status).toHaveBeenCalledWith(500)
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Internal Server Error' })
     })
   })
 })
