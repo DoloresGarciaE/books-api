@@ -2,7 +2,7 @@
   "name": "bookshop-api",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prestart": "npm run build"
   },
   "dependencies": {
     "axios": "^1.6.2",
@@ -22,10 +23,11 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "jest": "^30.0.5",
     "typescript": "^5.2.2",
     "vite": "^6.3.5",
     "vite-plugin-node": "^5.0.1",
-    "vitest": "^0.34.6"
+    "vitest": "^3.2.4"
   }
 }
