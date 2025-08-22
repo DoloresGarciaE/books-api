@@ -1,6 +1,4 @@
 import type { Request, Response, NextFunction } from 'express'
-import { BooksProvider } from '../providers/books'
-import { getMetrics } from '../services/metrics'
 import type { Book } from '../models/book'
 
 export interface GetMetricsQuery {
@@ -13,11 +11,11 @@ export interface MetricResponse {
   booksWrittenByAuthor: Book[]
 }
 
-const metricsHandler = (booksProvider: BooksProvider) => {
+const metricsHandler = (metricService: any) => {
   const get = async (req: Request<{}, {}, {}, GetMetricsQuery>, res: Response<MetricResponse>, next: NextFunction) => {
     try {
       const author = req.query.author as string | undefined
-      const metrics = await getMetrics(booksProvider, author)
+      const metrics = await metricService.getMetrics(author)
       return res.status(200).json(metrics)
     } catch (err) {
       console.error('Error fetching metrics:', (err as Error).message)

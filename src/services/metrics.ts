@@ -38,4 +38,13 @@ async function getMetrics(booksProvider: BooksProvider, author?: string) {
   }
 }
 
-export { getMetrics, getMeanUnitsSold, getCheapestBook, getBooksWrittenByAuthor }
+const metricService = (booksProvider: BooksProvider) => {
+  return {
+    getMetrics: (author?: string) => getMetrics(booksProvider, author),
+    getMeanUnitsSold,
+    getCheapestBook,
+    getBooksWrittenByAuthor
+  }
+}
+
+export default metricService

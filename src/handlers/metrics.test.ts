@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
 import metricsHandler from './metrics'
+import metricService from '../services/metrics'
 import type { NextFunction, Request, Response } from 'express'
-import { getBooksWrittenByAuthor, getCheapestBook, getMeanUnitsSold, getMetrics } from '../services/metrics'
 import { Book } from '../models/book'
 import { BooksProvider } from '../providers/books'
 
@@ -18,7 +18,8 @@ describe('metricsHandler', () => {
   }
 
   // Set up handler with mock provider
-  const handler = metricsHandler(mockBooksProvider)
+  const service = metricService(mockBooksProvider)
+  const handler = metricsHandler(service)
 
   // Mock request and response
   let mockReq: Partial<Request>
@@ -67,27 +68,27 @@ describe('metricsHandler', () => {
     });  
 
     it('getMeanUnitsSold to return 0 when list is empty', () => {
-      expect(getMeanUnitsSold([])).toBe(0)
+      expect(service.getMeanUnitsSold([])).toBe(0)
     })
 
     it('getMeanUnitsSold returns correct average for multiple books', () => {
-      expect(getMeanUnitsSold(mockBooks)).toBe(200)
+      expect(service.getMeanUnitsSold(mockBooks)).toBe(200)
     })
 
     it('getCheapestBook returns null when list is empty', () => {
-      expect(getCheapestBook([])).toBeNull()
+      expect(service.getCheapestBook([])).toBeNull()
     })
 
     it('getCheapestBook returns correct identifies the cheapest book', () => {
-      expect(getCheapestBook(mockBooks)).toEqual(mockBooks[1])
+      expect(service.getCheapestBook(mockBooks)).toEqual(mockBooks[1])
     })
 
     it('getBooksWrittenByAuthor returns an empty array when no author is provided', () => {
-      expect(getBooksWrittenByAuthor(mockBooks)).toEqual([])
+      expect(service.getBooksWrittenByAuthor(mockBooks)).toEqual([])
     })
 
     it('getBooksWrittenByAuthor returns books written by the specified author', () => {
-      expect(getBooksWrittenByAuthor(mockBooks, 'Author 1')).toEqual([
+      expect(service.getBooksWrittenByAuthor(mockBooks, 'Author 1')).toEqual([
         mockBooks[0],
         mockBooks[2],
       ])

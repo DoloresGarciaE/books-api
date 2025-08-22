@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import BooksProvider from './providers/books.ts'
 import MetricsHandler from './handlers/metrics.ts'
 import cors from 'cors'
+import MetricService from './services/metrics.ts'
   
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -10,7 +11,8 @@ app.use(express.json())
 app.use(cors())
 
 const booksProvider = BooksProvider()
-const metricsHandler = MetricsHandler(booksProvider)
+const metricService = MetricService(booksProvider)
+const metricsHandler = MetricsHandler(metricService)
 app.get('/metrics', metricsHandler.get)
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
