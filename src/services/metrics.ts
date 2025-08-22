@@ -1,5 +1,5 @@
-import { MetricResponse } from "../handlers/metrics";
-import { Book } from "../models/book";
+import { Book } from "../models/book"
+import { BooksProvider } from "../providers/books"
 
 function getMeanUnitsSold(books: Book[]): number {
   if (books.length === 0) return 0
@@ -14,14 +14,22 @@ function getCheapestBook(books: Book[]): Book | null {
   }, books[0])
 }
 
-function getBooksWrittenByAuthor(books: Book[], author: string): Book[] {
+function getBooksWrittenByAuthor(books: Book[], author?: string): Book[] {
+  if (!author) return []
   return books.filter(book => book.author.toLowerCase() === author.toLowerCase())
 }
 
-function getMetrics(books: Book[], author?: string): MetricResponse {
+async function getMetrics(booksProvider: BooksProvider, author?: string) {
+  
+  const books: Book[] = await booksProvider.getBooks()
+
+  if (!books || books.length === 0) {
+    throw new Error('No books found')
+  }
+
   const meanUnitsSold = getMeanUnitsSold(books)
   const cheapestBook = getCheapestBook(books)
-  const booksWrittenByAuthor = author ? getBooksWrittenByAuthor(books, author) : []
+  const booksWrittenByAuthor = getBooksWrittenByAuthor(books, author)
 
   return {
     meanUnitsSold,
@@ -30,4 +38,4 @@ function getMetrics(books: Book[], author?: string): MetricResponse {
   }
 }
 
-export { getMeanUnitsSold, getCheapestBook, getBooksWrittenByAuthor, getMetrics }
+export { getMetrics, getMeanUnitsSold, getCheapestBook, getBooksWrittenByAuthor }
