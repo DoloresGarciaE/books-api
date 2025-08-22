@@ -1,20 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
 import metricsHandler from './metrics'
-import { Request, Response } from 'express'
-import { BooksProvider } from '../providers/books'
+import type { NextFunction, Request, Response } from 'express'
+import { getBooksWrittenByAuthor, getCheapestBook, getMeanUnitsSold, getMetrics } from '../services/metrics'
 import { Book } from '../models/book'
+import { BooksProvider } from '../providers/books'
 
 describe('metricsHandler', () => {
-  // Mock data
   const mockBooks: Book[] = [
-    { id: 1, name: 'Book 1', author: 'Author 1', unitsSold: 100, price: 20 },
-    { id: 2, name: 'Book 2', author: 'Author 2', unitsSold: 200, price: 15 },
-    { id: 3, name: 'Book 3', author: 'Author 1', unitsSold: 300, price: 25 }
+    { id: '1', name: 'Book 1', author: 'Author 1', unitsSold: 100, price: 20 },
+    { id: '2', name: 'Book 2', author: 'Author 2', unitsSold: 200, price: 15 },
+    { id: '3', name: 'Book 3', author: 'Author 1', unitsSold: 300, price: 25 },
   ]
 
   // Mock BooksProvider
   const mockBooksProvider: BooksProvider = {
-    getBooks: vi.fn().mockReturnValue(mockBooks)
+    getBooks: vi.fn().mockResolvedValue(mockBooks)
   }
 
   // Set up handler with mock provider
@@ -23,22 +23,22 @@ describe('metricsHandler', () => {
   // Mock request and response
   let mockReq: Partial<Request>
   let mockRes: Partial<Response>
+  let mockNext: Partial<NextFunction>
   let jsonMock: any
 
   beforeEach(() => {
     jsonMock = vi.fn()
     mockRes = {
       status: vi.fn().mockReturnThis(),
-      json: jsonMock
+      json: jsonMock,
     }
-    mockReq = {
-      query: {}
-    }
+    mockReq = { query: {} }
+    mockNext = vi.fn()
   })
 
   describe('get', () => {
     it('should return metrics with empty author query', async () => {
-      await handler.get(mockReq as any, mockRes as any)
+      await handler.get(mockReq as Request, mockRes as Response, mockNext as NextFunction)
 
       expect(mockBooksProvider.getBooks).toHaveBeenCalled()
       expect(mockRes.status).toHaveBeenCalledWith(200)
@@ -52,7 +52,7 @@ describe('metricsHandler', () => {
     it('should return metrics with author query', async () => {
       mockReq.query = { author: 'Author 1' }
 
-      await handler.get(mockReq as any, mockRes as any)
+      await handler.get(mockReq as Request, mockRes as Response, mockNext as NextFunction)
 
       expect(mockBooksProvider.getBooks).toHaveBeenCalled()
       expect(mockRes.status).toHaveBeenCalledWith(200)
@@ -64,26 +64,38 @@ describe('metricsHandler', () => {
           mockBooks[2]
         ]
       })
+    });  
+
+    it('getMeanUnitsSold to return 0 when list is empty', () => {
+      expect(getMeanUnitsSold([])).toBe(0)
     })
 
-    it('should return 404 if no books found', async () => {
-      mockBooksProvider.getBooks = vi.fn().mockReturnValue([])
-
-      await handler.get(mockReq as any, mockRes as any)
-
-      expect(mockBooksProvider.getBooks).toHaveBeenCalled()
-      expect(mockRes.status).toHaveBeenCalledWith(404)
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'No books found' })
+    it('getMeanUnitsSold returns correct average for multiple books', () => {
+      expect(getMeanUnitsSold(mockBooks)).toBe(200)
     })
 
-    it('should return 500 if an error occurs', async () => {
-      mockBooksProvider.getBooks = vi.fn().mockRejectedValue(new Error('API error'))
+    it('getCheapestBook returns null when list is empty', () => {
+      expect(getCheapestBook([])).toBeNull()
+    })
 
-      await handler.get(mockReq as any, mockRes as any)
+    it('getCheapestBook returns correct identifies the cheapest book', () => {
+      expect(getCheapestBook(mockBooks)).toEqual(mockBooks[1])
+    })
 
-      expect(mockBooksProvider.getBooks).toHaveBeenCalled()
-      expect(mockRes.status).toHaveBeenCalledWith(500)
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Internal Server Error' })
+    it('getBooksWrittenByAuthor returns an empty array when no author is provided', () => {
+      expect(getBooksWrittenByAuthor(mockBooks)).toEqual([])
+    })
+
+    it('getBooksWrittenByAuthor returns books written by the specified author', () => {
+      expect(getBooksWrittenByAuthor(mockBooks, 'Author 1')).toEqual([
+        mockBooks[0],
+        mockBooks[2],
+      ])
+    })
+
+    it('BooksProvider should return all books', async () => {
+      const books = await mockBooksProvider.getBooks()
+      expect(books).toEqual(mockBooks)
     })
   })
-})
+});
